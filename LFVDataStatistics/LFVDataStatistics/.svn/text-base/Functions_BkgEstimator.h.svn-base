@@ -1,0 +1,29 @@
+#include "TH1.h"
+#include "LFVStatistics/minim.h"
+#include "TMath.h"
+
+namespace BkgEstimator{
+
+TH1* meanEstimator(TH1* h_1,TH1* h2);
+
+class DoublePoisson : public IObjective
+{
+	public:
+	void setN1(int n1){m_n1 = n1;}
+	void setN2(int n2){m_n2 = n2;}
+
+	virtual double function(double a)
+	{
+	return 1 - TMath::Poisson(m_n1,a)*TMath::Poisson(m_n2,a);
+	}
+
+	private:
+	int m_n1; //number of entries in hist 1 bin
+	int m_n2; // number of entries in hist 2 bin
+};
+
+TH1* likelihoodPdf(TH1* h_bkg);
+double likelihoodValue(TH1* h_pdf, TH1* h_1, TH1* h_2);
+double pValue(TH1* h_pdf, double value);
+
+}

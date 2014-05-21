@@ -1,0 +1,72 @@
+#include "LFVStatistics/Functions_ToyData.h"
+#include "LFVStatistics/Constants.h"
+#include "TRandom.h"
+#include "TFile.h"
+#include "TString.h"
+
+namespace ToyData
+{
+
+TH1* makeTH1(int nEvents, unsigned int seed)
+{
+	TRandom rand;
+	rand.SetSeed(seed);
+	TH1D* h = new TH1D("h_data","h_data",COLL_MASS_NBINS,COLL_MASS_MIN,COLL_MASS_MAX);
+	for(int i=0; i<nEvents; i++)
+	{
+		h->Fill(rand.Exp(40));
+	}
+	return h;
+}
+
+TH1* makeTH1SNB(int nEvents, unsigned int seed)
+{
+	TRandom rand;
+	rand.SetSeed(seed);
+	TH1D* h = new TH1D("h_data","h_data",COLL_MASS_NBINS,COLL_MASS_MIN,COLL_MASS_MAX);
+	for(int i=0; i<nEvents; i++)
+	{
+		h->Fill(rand.Exp(40));
+	}
+
+	for(int i=0; i<nEvents/3.; i++)
+	{
+		h->Fill(rand.Gaus(50,10));
+	}
+
+	return h;
+}
+
+
+TH1D* getTH1MC(unsigned int seed)
+{
+	TRandom rand;
+	rand.SetSeed(seed);
+	TFile* f = TFile::Open("../data/modelinput_SigStrength2.root");
+	TH1D* b = (TH1D*)f->Get("BG");
+	TH1D* h = new TH1D("h_data","h_data",COLL_MASS_NBINS,COLL_MASS_MIN,COLL_MASS_MAX);
+	for(int i=1; i<COLL_MASS_NBINS+1; i++)
+	{
+		h->SetBinContent(i,rand.Poisson(b->GetBinContent(i)));
+	}
+	return h;
+}
+
+TH1D* getTH1MCPlusSignal(double sigstrength,unsigned int seed)
+{
+	TRandom rand;
+	rand.SetSeed(seed);
+	TFile* f = TFile::Open("../data/modelinput_SigStrength2.root");
+	TH1D* b = (TH1D*)f->Get("BG");
+	TH1D* s = (TH1D*)f->Get("Signal");
+	b->Add(s,sigstrength);
+	TH1D* h = new TH1D("h_data","h_data",COLL_MASS_NBINS,COLL_MASS_MIN,COLL_MASS_MAX);
+	for(int i=1; i<COLL_MASS_NBINS+1; i++)
+		{
+			h->SetBinContent(i,rand.Poisson(b->GetBinContent(i)));
+		}
+
+	return h;
+}
+
+}

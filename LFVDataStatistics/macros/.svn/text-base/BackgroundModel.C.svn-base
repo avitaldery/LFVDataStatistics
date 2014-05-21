@@ -1,0 +1,83 @@
+#ifndef __CINT__
+#include "RooGlobalFunc.h"
+#endif
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooDataHist.h"
+#include "RooGaussian.h"
+#include "TCanvas.h"
+#include "RooPlot.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TRandom.h"
+#include "TLine.h"
+using namespace RooFit ;
+
+#include "LFVStatistics/Functions_ToyData.h"
+#include "LFVStatistics/Functions_BkgEstimator.h"
+#include "LFVStatistics/Constants.h"
+
+//TTree* makeTTree() ;
+
+void BackgroundModel()
+{
+   InitExterns();
+
+  ////////////////////////////////////////////////////////
+  // I m p o r t i n g   R O O T   h i s t o g r a m s  //
+  ////////////////////////////////////////////////////////
+
+  // I m p o r t   T H 1   i n t o   a   R o o D a t a H i s t
+  // ---------------------------------------------------------
+
+  // Create toy data (ME and EM histograms)
+//  TH1* h_1 = ToyData::makeTH1(430,343);
+//  TH1* h_2 = ToyData::makeTH1SNB(450,0);
+
+  // Get toy data from file
+  double SignalStrength = 3.0;
+  TH1* h_1 = ToyData::getTH1MC(0);
+  TH1* h_2 = ToyData::getTH1MCPlusSignal(SignalStrength,0);
+
+  TH1* h_bkg = BkgEstimator::meanEstimator(h_1,h_2);
+
+  // Declare observable x
+  RooRealVar x("x","x",0,300) ;
+
+  // Create a binned dataset that imports contents of TH1 and associates its contents to observable 'x'
+  RooDataHist dh_1("dh_1","dh_1",x,Import(*h_1)) ;
+  RooDataHist dh_2("dh_2","dh_2",x,Import(*h_2)) ;
+  RooDataHist dh_bkg("dh_2","dh_2",x,Import(*h_bkg)) ;
+
+
+  // P l o t  R o o D a t a H i s t
+  // ---------------------------------------------------
+
+  // Make plot of binned dataset showing Poisson error bars (RooFit default)
+  RooPlot* xframe = x.frame(Title("Imported TH1 with Poisson error bars")) ;
+  dh_1.plotOn(xframe,LineColor(kBlue),MarkerColor(kBlue)) ;
+  dh_2.plotOn(xframe,LineColor(kGreen+2),MarkerColor(kGreen + 2)) ;
+  dh_bkg.plotOn(xframe,LineColor(kBlack),MarkerColor(kBlack)) ;
+
+  // Make likelihood pdf
+  // ---------------------------------------------------
+  TH1* h_likelihoodPdf = BkgEstimator::likelihoodPdf(h_bkg);
+  double lValue = BkgEstimator::likelihoodValue(h_bkg,h_1,h_2);
+  double pValue = BkgEstimator::pValue(h_likelihoodPdf,lValue);
+
+  TLine *vLine = new TLine(lValue,0,lValue,0.01);
+  vLine->SetLineColor(kRed);
+
+  cout << "lValue: " << lValue << " pValue " << pValue << endl;
+
+  // Draw all frames on a canvas
+  TCanvas* c = new TCanvas("c","c",800,400) ;
+  c->Divide(2,1);
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.6) ; xframe->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ;
+  h_likelihoodPdf->Draw(); vLine->Draw();//xframe2->GetYaxis()->SetTitleOffset(1.6) ; xframe2->Draw()
+
+
+}
+
+

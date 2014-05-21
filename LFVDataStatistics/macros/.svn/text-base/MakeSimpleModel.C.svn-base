@@ -1,0 +1,90 @@
+#ifndef __CINT__
+#include "RooGlobalFunc.h"
+#endif
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooGaussian.h"
+#include "RooHistPdf.h"
+#include "RooDataHist.h"
+#include "TCanvas.h"
+#include "TFile.h"
+#include "TH1D.h"
+#include "RooPlot.h"
+#include "TAxis.h"
+
+using namespace RooFit ;
+using namespace RooStats;
+using namespace HistFactory;
+
+#include "RooStats/HistFactory/Measurement.h"
+#include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
+
+void MakeSimpleModel() {
+	// This function creates a simple model with one channel.
+
+	// Create the measurement object.
+		RooStats::HistFactory::Measurement measurement_1("measurement_1", "measurement_1");
+		// Configure the measurement.
+			// Set the output files' prefix.
+				measurement_1.SetOutputFilePrefix("../results/measurement_1");
+			// Set ExportOnly to false, meaning that further
+			// activities (such as fitting and plotting) shall be
+			// carried out beyond simple exporting to the workspace.
+				measurement_1.SetExportOnly(false);
+			// Set the parameter of interest.
+				measurement_1.SetPOI("SigXsecOverSM");
+			// Set the luminosity.
+				// It is assumed that all histograms have been
+				// scaled by luminosity.
+				measurement_1.SetLumi(1.0);
+				// Set the uncertainty.
+					measurement_1.SetLumiRelErr(0.10);
+
+		// Create a channel.
+			RooStats::HistFactory::Channel channel_1("channel_1");
+			// Configure the channel.
+				// Set the data.
+					// The data is a histogram representing
+					// the measured distribution. It can
+					// have one or many bins.
+					// The name of the ROOT file containing
+					// the data and the name to attribute to
+					// the data are specified.
+					channel_1.SetData("Data", "../data/modelinput_withStats_noZeros.root");
+			// Create a sample (signal).
+				// Samples describe the various processes tha
+				// are used to model the data. In this case,
+				// they consist only of a signal process and a
+				// single background process.
+				RooStats::HistFactory::Sample signal_1("Signal", "Signal", "../data/modelinput_withStats_noZeros.root");
+				// Configure the sample.
+					// The cross section scaling parameter
+					// is added.
+						signal_1.AddNormFactor("SigXsecOverSM", 1, 0, 30);
+					// A systematic uncertainty of 5% is
+					// added.
+//						signal_1.AddOverallSys("systematic_1",  0.95, 1.05);
+				// Add the sample to the channel.
+					channel_1.AddSample(signal_1);
+			// Create a sample (background).
+				RooStats::HistFactory::Sample background_1("BG", "BG", "../data/modelinput_withStats_noZeros.root");
+				// Configure the sample.
+					// Add a statistical uncertainty.
+//						background_1.ActivateStatError("background_1_statistical_uncertainty", "../data/modelinput_withStats_noZeros.root");
+					// A systematic uncertainty of 5% is added.
+//						background_1.AddOverallSys("systematic_uncertainty_2", 0.95, 1.05 );
+				// Add the sample to the channel.
+					channel_1.AddSample(background_1);
+
+
+			// Add the channel to the measurement.
+				measurement_1.AddChannel(channel_1);
+		// Access the specified data and collect, copy and store the
+		// histograms.
+			measurement_1.CollectHistograms();
+		// Print a text representation of the model.
+			measurement_1.PrintTree();
+		// Run the measurement (this is equivalent to an execution of
+		// the program hist2workspace).
+			MakeModelAndMeasurementFast(measurement_1);
+}

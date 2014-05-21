@@ -1,0 +1,110 @@
+#ifndef __CINT__
+#include "RooGlobalFunc.h"
+#endif
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooDataHist.h"
+#include "RooGaussian.h"
+#include "TCanvas.h"
+#include "RooPlot.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TRandom.h"
+#include "TLine.h"
+using namespace RooFit ;
+
+#include "LFVStatistics/Functions_ToyData.h"
+#include "LFVStatistics/Functions_BkgEstimator.h"
+#include "LFVStatistics/Constants.h"
+
+//TTree* makeTTree() ;
+
+void KStest()
+{
+   InitExterns();
+
+  ////////////////////////////////////////////////////////
+  // I m p o r t i n g   R O O T   h i s t o g r a m s  //
+  ////////////////////////////////////////////////////////
+
+  // I m p o r t   T H 1   i n t o   a   R o o D a t a H i s t
+  // ---------------------------------------------------------
+
+  // Create toy data (ME and EM histograms)
+//  TH1* h_1 = ToyData::makeTH1(430,343);
+//  TH1* h_2 = ToyData::makeTH1SNB(450,0);
+
+  // Get toy data from file
+  double SignalStrength = 3.0;
+  TH1D* h_1 = ToyData::getTH1MC(0);
+  TH1D* h_2 = ToyData::getTH1MCPlusSignal(SignalStrength,0);
+
+  Int_t minbin = 21;
+//  Int_t maxbin = h_1->GetSize()-2;
+  Int_t maxbin = 30;
+  Int_t hmax = (h_1->GetMaximum() > h_2->GetMaximum() ? h_1->GetMaximum() : h_2->GetMaximum());
+
+  double F_1[hmax];
+  double F_2[hmax];
+  TH1D* h_F1 = new TH1D("F1","F1",hmax,1,hmax);
+  TH1D* h_F2 = new TH1D("F2","F2",hmax,1,hmax);
+
+  int Isum_1[hmax+1];
+  std::fill(Isum_1,Isum_1+hmax+1,0);
+  int Isum_2[hmax+1];
+  std::fill(Isum_2,Isum_2+hmax+1,0);
+
+  for (int j=minbin; j<maxbin; j++){
+	  Int_t val1 = h_1->GetBinContent(j);
+	  for (int k=1; k<val1+1; k++)	{Isum_1[k]++;}
+	  Int_t val2 = h_2->GetBinContent(j);
+	  for (int l=1; l<val2+1; l++)	{Isum_2[l]++;}
+
+  }
+
+  double KSstatistic = 0;
+
+  for (int i=1;i < hmax+1; i++){
+	  F_1[i]=(1./(maxbin-minbin))*Isum_1[i];
+//	  cout << "F1 " << F_1[i] << endl;
+	  F_2[i]=(1./(maxbin-minbin))*Isum_2[i];
+	  h_F1->SetBinContent(i,F_1[i]);
+	  h_F2->SetBinContent(i,F_2[i]);
+	  if (std::abs(F_1[i]-F_2[i]) > KSstatistic) {KSstatistic = std::abs(F_1[i]-F_2[i]);}
+  }
+
+  double D = KSstatistic*std::sqrt(maxbin-minbin)/std::sqrt(2);
+
+
+
+
+  // Declare observable x
+  RooRealVar x("x","x",0,300) ;
+
+  // Create a binned dataset that imports contents of TH1 and associates its contents to observable 'x'
+  RooDataHist dh_1("dh_1","dh_1",x,Import(*h_1)) ;
+  RooDataHist dh_2("dh_2","dh_2",x,Import(*h_2)) ;
+
+
+  // P l o t  R o o D a t a H i s t
+  // ---------------------------------------------------
+
+  // Make plot of binned dataset showing Poisson error bars (RooFit default)
+  RooPlot* xframe = x.frame(Title("Imported TH1 with Poisson error bars")) ;
+  dh_1.plotOn(xframe,LineColor(kBlue),MarkerColor(kBlue)) ;
+  dh_2.plotOn(xframe,LineColor(kGreen+2),MarkerColor(kGreen + 2)) ;
+
+
+
+  // Draw all frames on a canvas
+  TCanvas* c = new TCanvas("c","c",800,400) ;
+  c->Divide(2,1);
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.6) ; xframe->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; h_F1->Draw(); h_F2->Draw("same");
+
+  cout << "D: " << D <<endl;
+
+
+}
+
+

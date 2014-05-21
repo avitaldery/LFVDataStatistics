@@ -1,0 +1,11 @@
+
+#include "TH1D.h"
+#include "TString.h"
+
+namespace ToyData{
+TH1* makeTH1(int nEvents, unsigned int seed) ;
+TH1* makeTH1SNB(int nEvents, unsigned int seed) ;
+TH1D* getTH1MC(unsigned int seed);
+TH1D* getTH1MCPlusSignal(double sigstrength,unsigned int seed);
+
+}

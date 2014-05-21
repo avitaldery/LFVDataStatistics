@@ -1,0 +1,79 @@
+#include "LFVStatistics/Functions_BkgEstimator.h"
+#include "LFVStatistics/Constants.h"
+#include "TH1.h"
+#include "TRandom.h"
+#include <iostream>
+
+using namespace std;
+namespace BkgEstimator{
+
+TH1* meanEstimator(TH1* h_1,TH1* h_2)
+{
+	TH1D* h_bkg = new TH1D("h_bkg","h_bkg",60,0,300);
+	DoublePoisson dp;
+	Minimizer minim;
+	for(int i=1; i<=COLL_MASS_NBINS; i++)
+	{
+		int n1 = h_1->GetBinContent(i);
+		int n2 = h_2->GetBinContent(i);
+		dp.setN1(n1);
+		dp.setN2(n2);
+		double min = (n1>n2 ? n2 : n1);
+		double max = (n1>n2 ? n1 : n2);
+//		cout << "BkgEstimator::meanEstimator minimizing in the range " << min << " - " << max << endl;
+		double estimator = minim.minimize(dp, min, max, 0.0001);
+		h_bkg->SetBinContent(i,estimator);
+	}
+	return h_bkg;
+}
+
+TH1* likelihoodPdf(TH1* h_bkg)
+{
+	TRandom rand;
+	rand.SetSeed(LIKELIHOOD_PDF_SEED);
+
+	TH1D* h1_likelihoodPdf = new TH1D("h1_likelihoodPdf","h1_likelihoodPdf",LIKELIHOOD_PDF_NBINS,LIKELIHOOD_PDF_MIN,LIKELIHOOD_PDF_MAX);
+	for(int i=1; i<=TOY_MC_NUMOFEVENTS; i++)
+	{
+		double l = 0;
+		for(int j=COLL_MASS_MinSigBin; j<=COLL_MASS_MaxSigBin; j++)
+		{
+			double bkg = h_bkg->GetBinContent(j);
+			double n1 = rand.Poisson(bkg);
+			double n2 = rand.Poisson(bkg);
+//			l *= TMath::Poisson(n1,bkg)*TMath::Poisson(n2,bkg);
+			l += -1.*(TMath::Log(TMath::Poisson(n1,bkg)) + TMath::Log(TMath::Poisson(n2,bkg)));
+		}
+//		cout << "likelihoodPdf:: l " << l << endl;
+		h1_likelihoodPdf->Fill(l,1./TOY_MC_NUMOFEVENTS);
+	}
+
+	return h1_likelihoodPdf;
+}
+
+
+double likelihoodValue(TH1* h_pdf, TH1* h_1, TH1* h_2)
+{
+	double l = 0;
+	for(int j=COLL_MASS_MinSigBin; j<=COLL_MASS_MaxSigBin; j++)
+	{
+		double bkg = h_pdf->GetBinContent(j);
+		double n1 =  h_1->GetBinContent(j);
+		double n2 =  h_2->GetBinContent(j);
+		l += -1.*(TMath::Log(TMath::Poisson(n1,bkg)) + TMath::Log(TMath::Poisson(n2,bkg)));
+	}
+
+	return l;
+}
+
+double pValue(TH1* h_pdf, double value)
+{
+	int bin_i = h_pdf->GetXaxis()->FindBin(value);
+	cout << "bin_i " << bin_i << endl;
+
+	return h_pdf->Integral(bin_i,LIKELIHOOD_PDF_MAX);
+}
+
+
+
+}
