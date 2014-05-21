@@ -12,7 +12,7 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-	//NEW blabla 15:52 PM
+	//HAFTA'A!!!! 15:00 PM CERN TIME
 	InitExterns();
 
 	int Polydegree = 2;
