@@ -15,9 +15,7 @@ void DataBGEstimation(TString filename, TString sigFile)
 	//new
 	InitExterns();
 
-	double newVarAVITAL = 8;
-
-	int Polydegree = 2;
+	int Polydegree = 1;
 
 	TFile* f = new TFile(filename);
 
@@ -35,16 +33,16 @@ void DataBGEstimation(TString filename, TString sigFile)
 	double muHatB[nbins+2+Polydegree];
 
 	// add polinom on top of histogram
-	double a0=0.1;
-	double a1=0.003;
+	double a0 = 2;
+	double a1 = 0;
 	TH1D* h_ME_plus = BkgEstimator::AddPolonHisto(h_ME,a0,a1);
 
 	//get BG estimation
-	TH1D* h_B =  BkgEstimator::meanDataEstimator(h_ME_plus,h_EM,muHatB,h_sig,Polydegree,"B");
+	TH1D* h_B =  BkgEstimator::meanDataEstimator(h_ME_plus,h_ME,muHatB,h_sig,Polydegree,"B");
 
 	//create blind histos to draw
 	TH1D* h_ME_blind = ToyData::getBlindHisto(h_ME,8,12,"ME blind");
-	TH1D* h_EM_blind = ToyData::getBlindHisto(h_EM,8,12,"EM blind");
+	TH1D* h_EM_blind = ToyData::getBlindHisto(h_ME_plus,8,12,"EM blind");
 
 	TLegend* leg = new TLegend(0.5,0.7,0.7,0.9);
 	leg->SetFillColor(kWhite); leg->SetBorderSize(1); leg->SetLineColor(0); leg->SetTextFont(42);
@@ -53,7 +51,7 @@ void DataBGEstimation(TString filename, TString sigFile)
 	h_B->SetLineColor(kBlack); h_B->SetLineWidth(2); h_B->Draw();
 	h_ME_blind->SetLineColor(kRed); h_ME_blind->SetLineWidth(2); h_ME_blind->Draw("e1 sames");
 	h_EM_blind->SetLineColor(kBlue); h_EM_blind->SetLineWidth(2); h_EM_blind->Draw("e1 sames");
-	h_EM->SetLineColor(kBlue); h_EM->SetLineWidth(2); h_EM->Draw("e1 sames");
+//	h_EM->SetLineColor(kBlue); h_EM->SetLineWidth(2); h_EM->Draw("e1 sames");
 //	h_MESignal->SetLineColor(kRed);h_MESignal->SetLineWidth(2); h_MESignal->Draw("sames");
 //	h_MEplus->Draw("sames");
 	leg->AddEntry(h_ME_blind,"#mue","l");
@@ -62,8 +60,7 @@ void DataBGEstimation(TString filename, TString sigFile)
 	leg->Draw();
 
 	//get best polynomial coefficients
-	BkgEstimator::PrintPolyCoefficients(h_ME,h_EM,2);
+	BkgEstimator::PrintPolyCoefficients(h_ME_plus,h_ME,Polydegree);
 
-}efficients(h_ME,h_EM,2);
 
 }
