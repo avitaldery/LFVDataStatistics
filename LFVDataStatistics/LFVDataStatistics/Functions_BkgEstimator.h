@@ -13,6 +13,8 @@ void meanDataEstimatorFunc(int &npar, double *gin, double &f, double *par, int i
 
 double LikelihoodTestValue(TH1D* h_1, TH1D* h_2, double* muHatB, TH1D* signalGaus,int degree);
 
+TH1D* AddPolonHisto(TH1D* h, double value1, double value2);
+
 
 class NewDataObject : public TObject
 {
@@ -22,7 +24,7 @@ void setN1(double n1[],int size){m_n1 = new double[size]; for (int i=0; i<size; 
 void setN2(double n2[],int size){m_n2 = new double[size]; for (int i=0; i<size; i++){m_n2[i]=n2[i];}}
 void setS(double S[],int size){m_S = new double[size]; for (int i=0; i<size; i++){m_S[i]=S[i];}}
 void setSize(int size){m_size = size;}
-void setBins(const Double_t* bins,int size){m_bins = new Double_t[size]; for (int i=0; i<size; i++){m_bins[i] = bins[i];}}
+void setBins(const Double_t* bins,int size){m_bins = new double[size]; memcpy(m_bins,bins,size*sizeof(double));}
 void setDegree(int deg){m_degree = deg;}
 
 private:
@@ -30,7 +32,7 @@ int m_size;
 double *m_n1;
 double *m_n2;
 double *m_S;
-const Double_t *m_bins;
+double *m_bins;
 int m_degree;
 };
 

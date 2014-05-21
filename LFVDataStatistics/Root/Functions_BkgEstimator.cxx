@@ -25,7 +25,6 @@ TMinuit* minuit = 0;
 TMinuit* minuit2 = 0;
 TMinuit* minuit3 = 0;
 
-
 void Newf1(int &npar, double *gin, double &f, double *par, int iflag) {
 	//par[i] are the polynomial coefficients
 
@@ -35,37 +34,83 @@ void Newf1(int &npar, double *gin, double &f, double *par, int iflag) {
 	TH1D *h1 = data->m_h1;
 	TH1D *h2 = data->m_h2;
 	int degree = data->m_degree;
-
-	f = 0;
 	int nbins = h1->GetXaxis()->GetNbins();
 
+	// go blind
+	//h1 = BkgEstimator::GetBlindHisto(h1);
+	//h2 = BkgEstimator::GetBlindHisto(h2);
+
+	f = 0;
 	//add poly to h1 and calculate poisson for side bands
 	for (int i=1; i<=7; i++){
 		double n1 = h1->GetBinContent(i);
 		double n2 = h2->GetBinContent(i);
 		double Mcoll = h1->GetBinCenter(i);
-		double width = h1->GetXaxis()->GetBinWidth(i);
+		double Width = h1->GetXaxis()->GetBinWidth(i);
 		double g = 0;
 		for (int deg = 0; deg <= degree; deg++){
-			g += par[deg] * TMath::Power(Mcoll, deg)*width;
+			g += par[deg] * TMath::Power(Mcoll, deg) * Width;
 		}
-		double b = (n1+g+n2)/2;
-		f += -2*(TMath::Log(TMath::Poisson(n1+g,b))+TMath::Log(TMath::Poisson(n2,b)));
+		//double b = (n1+g+n2)/2;
+		//f += -2*(TMath::Log(TMath::Poisson(b,n1+g))+TMath::Log(TMath::Poisson(b,n2)));
+		f += -2*(TMath::Log(TMath::Poisson(n2,n1+g)));
 	}
+
 	for (int i=13; i<=nbins; i++){
 		double n1 = h1->GetBinContent(i);
 		double n2 = h2->GetBinContent(i);
 		double Mcoll = h1->GetBinCenter(i);
-		double width = h1->GetXaxis()->GetBinWidth(i);
+		double Width = h1->GetXaxis()->GetBinWidth(i);
 		double g = 0;
 		for (int deg = 0; deg <= degree; deg++){
-			g += par[deg] * TMath::Power(Mcoll, deg)*width;
+			g += par[deg] * TMath::Power(Mcoll, deg) * Width;
 		}
-		double b = (n1+g+n2)/2;
-		f += -2*(TMath::Log(TMath::Poisson(n1+g,b))+TMath::Log(TMath::Poisson(n2,b)));
+		//double b = (n1+g+n2)/2;
+		//f += -2*(TMath::Log(TMath::Poisson(n1+g,b))+TMath::Log(TMath::Poisson(n2,b)));
+		f += -2*(TMath::Log(TMath::Poisson(n2,n1+g)));
 	}
-
 }
+
+//void Newf1(int &npar, double *gin, double &f, double *par, int iflag) {
+//	//par[i] are the polynomial coefficients
+//
+//	//get histograms and polynomial degree
+//	HistoObject *data;
+//	data = (HistoObject*)minuit2->GetObjectFit();
+//	TH1D *h1 = data->m_h1;
+//	TH1D *h2 = data->m_h2;
+//	int degree = data->m_degree;
+//
+//	f = 0;
+//	int nbins = h1->GetXaxis()->GetNbins();
+//
+//	//add poly to h1 and calculate poisson for side bands
+//	for (int i=1; i<=7; i++){
+//		double n1 = h1->GetBinContent(i);
+//		double n2 = h2->GetBinContent(i);
+//		double Mcoll = h1->GetBinCenter(i);
+//		double width = h1->GetXaxis()->GetBinWidth(i);
+//		double g = 0;
+//		for (int deg = 0; deg <= degree; deg++){
+//			g += par[deg] * TMath::Power(Mcoll, deg)*width;
+//		}
+//		double b = (n1+g+n2)/2;
+//		f += -2*(TMath::Log(TMath::Poisson(n1+g,b))+TMath::Log(TMath::Poisson(n2,b)));
+//	}
+//	for (int i=13; i<=nbins; i++){
+//		double n1 = h1->GetBinContent(i);
+//		double n2 = h2->GetBinContent(i);
+//		double Mcoll = h1->GetBinCenter(i);
+//		double width = h1->GetXaxis()->GetBinWidth(i);
+//		double g = 0;
+//		for (int deg = 0; deg <= degree; deg++){
+//			g += par[deg] * TMath::Power(Mcoll, deg)*width;
+//		}
+//		double b = (n1+g+n2)/2;
+//		f += -2*(TMath::Log(TMath::Poisson(n1+g,b))+TMath::Log(TMath::Poisson(n2,b)));
+//	}
+//
+//}
 
 void PrintPolyCoefficients(TH1D* h1, TH1D* h2, int degree)
 {
@@ -76,42 +121,106 @@ void PrintPolyCoefficients(TH1D* h1, TH1D* h2, int degree)
 	d.seth2(h2);
 	d.setDegree(degree);
 
-	minuit3 = new TMinuit(degree + 1);
-	minuit3->SetObjectFit(&d);
-
-	minuit3->SetFCN(Newf1);
+	minuit2 = new TMinuit(degree);
+	minuit2->SetObjectFit(&d);
+	minuit2->SetFCN(Newf1);
 
 	// initialize the parameters:
 	TString varname;
 	double startValue = 0;
-	double stepSize = 0.0001;
+	double stepSize = 0.001;
 	double min = -1;
 	double max = 1;
 	Int_t ierflg = 0;
 
 	//wider range for the free coefficient
-	minuit3->mnparm(0,"a_0",startValue,stepSize,10*min,10*max,ierflg);
+	minuit2->mnparm(0,"a_0",startValue,stepSize,10*min,10*max,ierflg);
 
 	cout<<"ierflg = "<<ierflg<<endl;
 
 	//loop over the other coefficients
 	for (int deg = 1; deg <= degree; deg++) {
 		varname.Form("a_%d", deg);
-		minuit3->mnparm(deg, varname, startValue, stepSize, min, max, ierflg);
+		minuit2->mnparm(deg, varname, startValue, stepSize, min, max, ierflg);
 	}
-	minuit3->SetMaxIterations(500);
-	minuit3->Migrad();
+	minuit2->SetMaxIterations(5000);
+	minuit2->Migrad();
 
 	//print
-	double value, err;
+	double value[degree];
+	double err;
+	double g = 0;
 	TString printThis;
-	for (int i = 0; i <= degree; i++) {
-		minuit3->GetParameter(i, value, err);
-		printThis.Form("a_%d   %f", i, value);
-		cout << printThis << endl;
-	}
+	double a[degree];
+ 	for (int i = 0; i <= degree; i++) {
+		a[i]=minuit2->GetParameter(i, value[i], err);
+		printThis.Form("a_%d   %f", i, value[i]);
+    	cout << printThis << endl;
+    }
 }
 
+//
+//void PrintPolyCoefficients(TH1D* h1, TH1D* h2, int degree)
+//{
+//	InitExterns();
+//
+//	HistoObject d;
+//	d.seth1(h1);
+//	d.seth2(h2);
+//	d.setDegree(degree);
+//
+//	minuit3 = new TMinuit(degree + 1);
+//	minuit3->SetObjectFit(&d);
+//
+//	minuit3->SetFCN(Newf1);
+//
+//	// initialize the parameters:
+//	TString varname;
+//	double startValue = 0;
+//	double stepSize = 0.0001;
+//	double min = -1;
+//	double max = 1;
+//	Int_t ierflg = 0;
+//
+//	//wider range for the free coefficient
+//	minuit3->mnparm(0,"a_0",startValue,stepSize,10*min,10*max,ierflg);
+//
+//	cout<<"ierflg = "<<ierflg<<endl;
+//
+//	//loop over the other coefficients
+//	for (int deg = 1; deg <= degree; deg++) {
+//		varname.Form("a_%d", deg);
+//		minuit3->mnparm(deg, varname, startValue, stepSize, min, max, ierflg);
+//	}
+//	minuit3->SetMaxIterations(500);
+//	minuit3->Migrad();
+//
+//	//print
+//	double value, err;
+//	TString printThis;
+//	for (int i = 0; i <= degree; i++) {
+//		minuit3->GetParameter(i, value, err);
+//		printThis.Form("a_%d   %f", i, value);
+//		cout << printThis << endl;
+//	}
+//}
+
+TH1D* AddPolonHisto(TH1D* h, double value1, double value2)
+{
+	const TArrayD* binsarray = h->GetXaxis()->GetXbins();
+	const Double_t * massBins = binsarray->GetArray();	int nbins = h->GetXaxis()->GetNbins();
+	TH1D* hplus = new TH1D("MEplus","MEplus",nbins,massBins);
+	double n[nbins+2];
+		for (int i=1; i<=nbins; i++){
+			n[i] = h->GetBinContent(i);
+			double Mcoll = h->GetBinCenter(i);
+			double Width = h->GetXaxis()->GetBinWidth(i);
+			n[i] += value1 * Width + value2 * Mcoll * Width;
+		}
+	n[0] = 0; n[nbins+1] = 0;
+	hplus->SetContent(n);
+	return hplus;
+}
 
 void meanDataEstimatorFunc(int &npar, double *gin, double &f, double *par, int iflag)
 {
@@ -122,7 +231,7 @@ void meanDataEstimatorFunc(int &npar, double *gin, double &f, double *par, int i
 	double *n1 = data->m_n1;
 	double *n2 = data->m_n2;
 	double *S = data->m_S;
-	const Double_t *bins = data->m_bins;
+	double *bins = data->m_bins;
 	int degree = data->m_degree;
 	f=0;
 
