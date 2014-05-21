@@ -12,7 +12,7 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-	//HAFTA'A!!!! 15:00 PM CERN TIME
+	//15:10 PM CERN TIME
 	InitExterns();
 
 	int Polydegree = 2;
@@ -38,7 +38,7 @@ void DataBGEstimation(TString filename, TString sigFile)
 	TH1D* h_ME_plus = BkgEstimator::AddPolonHisto(h_ME,a0,a1);
 
 	//get BG estimation
-	TH1D* h_B =  BkgEstimator::meanDataEstimator(h_ME,h_EM,muHatB,h_sig,Polydegree,"B");
+	TH1D* h_B =  BkgEstimator::meanDataEstimator(h_ME_plus,h_EM,muHatB,h_sig,Polydegree,"B");
 
 	//create blind histos to draw
 	TH1D* h_ME_blind = ToyData::getBlindHisto(h_ME,8,12,"ME blind");
@@ -49,8 +49,8 @@ void DataBGEstimation(TString filename, TString sigFile)
 
 	h_B->GetXaxis()->SetTitle("M_{Collinear} (GeV)");
 	h_B->SetLineColor(kBlack); h_B->SetLineWidth(2); h_B->Draw();
-	h_ME_blind->SetLineColor(kRed); h_ME_blind->SetLineWidth(2); //h_ME_blind->Draw("e1 sames");
-	h_EM_blind->SetLineColor(kBlue); h_EM_blind->SetLineWidth(2);// h_EM_blind->Draw("e1 sames");
+	h_ME_blind->SetLineColor(kRed); h_ME_blind->SetLineWidth(2); h_ME_blind->Draw("e1 sames");
+	h_EM_blind->SetLineColor(kBlue); h_EM_blind->SetLineWidth(2); h_EM_blind->Draw("e1 sames");
 	h_EM->SetLineColor(kBlue); h_EM->SetLineWidth(2); h_EM->Draw("e1 sames");
 //	h_MESignal->SetLineColor(kRed);h_MESignal->SetLineWidth(2); h_MESignal->Draw("sames");
 //	h_MEplus->Draw("sames");
