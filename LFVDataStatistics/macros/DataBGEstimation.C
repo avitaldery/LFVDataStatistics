@@ -12,10 +12,10 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-	//15:10 PM CERN TIME
-	// bla bla haftaa2
 // change this
 	InitExterns();
+
+	double newVarAVITAL = 8;
 
 	int Polydegree = 2;
 
@@ -53,7 +53,7 @@ void DataBGEstimation(TString filename, TString sigFile)
 	h_B->SetLineColor(kBlack); h_B->SetLineWidth(2); h_B->Draw();
 	h_ME_blind->SetLineColor(kRed); h_ME_blind->SetLineWidth(2); h_ME_blind->Draw("e1 sames");
 	h_EM_blind->SetLineColor(kBlue); h_EM_blind->SetLineWidth(2); h_EM_blind->Draw("e1 sames");
-	h_EM->SetLineColor(kBlue); h_EM->SetLineWidth(2); h_EM->Draw("e1 sames");
+
 //	h_MESignal->SetLineColor(kRed);h_MESignal->SetLineWidth(2); h_MESignal->Draw("sames");
 //	h_MEplus->Draw("sames");
 	leg->AddEntry(h_ME_blind,"#mue","l");
