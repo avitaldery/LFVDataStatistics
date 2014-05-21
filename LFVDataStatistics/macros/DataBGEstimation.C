@@ -12,9 +12,9 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-	****************************88
-	*****************************************************8888
 	InitExterns();
+
+	double newVarAVITAL = 8;
 
 	int Polydegree = 2;
 
