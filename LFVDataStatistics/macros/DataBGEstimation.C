@@ -12,7 +12,7 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-	//my test
+	//my test1
 // change this
 	InitExterns();
 
