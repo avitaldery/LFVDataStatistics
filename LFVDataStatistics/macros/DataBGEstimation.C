@@ -12,7 +12,7 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-
+// change this
 	InitExterns();
 
 	int Polydegree = 2;
