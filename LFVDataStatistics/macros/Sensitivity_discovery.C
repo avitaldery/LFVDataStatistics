@@ -58,7 +58,7 @@ void Sensitivity_discovery(TString dataFile, TString signalFile)
    leg->SetFillColor(kWhite);
    leg->SetBorderSize(1); leg->SetLineColor(0); leg->SetTextFont(42);
 
-   TH1D* h_bPlusSig = ToyData::appendDataGaussian(h_b,1.9,"h_b_signal");
+   TH1D* h_bPlusSig = ToyData::appendSignal(h_b,h_sig,1.9,"h_b_signal");
 
    TCanvas* c1 = new TCanvas("BG estimation","BG estimation",600,600);
    h_ME_blind->GetXaxis()->SetTitle("M_{Collinear} (GeV)");
