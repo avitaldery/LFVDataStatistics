@@ -23,8 +23,6 @@ using namespace RooFit ;
 #include "LFVDataStatistics/Functions_BkgEstimator.h"
 #include "LFVDataStatistics/Constants.h"
 
-
-
 void Sensitivity_discovery(TString dataFile, TString signalFile)
 {
    InitExterns();
@@ -70,7 +68,6 @@ void Sensitivity_discovery(TString dataFile, TString signalFile)
    leg->AddEntry(h_ME_blind,"#mue","l"); leg->AddEntry(h_EM_blind,"e#mu","l"); leg->AddEntry(h_b,"BG estimation","l");
    leg->AddEntry(h_bPlusSig,"BR(h#rightarrow#tau#mu) = 10%","l");  leg->Draw();
 
-
    //generate brazil plot
    TH1D* h_vanilla = new TH1D("vanilla","3#sigma sensitivity for discovery;#mu",150,0,5);
 
@@ -108,7 +105,6 @@ void Sensitivity_discovery(TString dataFile, TString signalFile)
    h_vanilla->GetQuantiles(1,&quantile_1sigma2,&prob3);
    h_vanilla->GetQuantiles(1,&quantile_2sigma,&prob4);
    h_vanilla->GetQuantiles(1,&quantile_2sigma2,&prob5);
-
 
    TH1D* h_green = new TH1D("greenquantile","greenquantile",150,0,5);
    int bin_med = h_green->GetXaxis()->FindBin(quantile);
