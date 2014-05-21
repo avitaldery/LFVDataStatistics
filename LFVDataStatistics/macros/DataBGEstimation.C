@@ -12,9 +12,9 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
-	****************************88
-	// bla bla bla
 	InitExterns();
+
+	double newVarAVITAL = 8;
 
 	int Polydegree = 2;
 
@@ -62,5 +62,7 @@ void DataBGEstimation(TString filename, TString sigFile)
 
 	//get best polynomial coefficients
 	BkgEstimator::PrintPolyCoefficients(h_ME,h_EM,2);
+
+}efficients(h_ME,h_EM,2);
 
 }
