@@ -85,7 +85,5 @@ void InitExterns()
 //	}
 //	DATA_GAUSSIAN->Scale(50./100000);
 
-	TFile* f = new TFile("../../CutFlowOptimization/2014_05_19_SymmetricPt/Signal/HTM_20_20_9.9_0.1.LFV.AnaHists.root");
-	DATA_GAUSSIAN = (TH1D*)f->Get("nom/em_LFV_ME_noS_McollHiggs_Unblind");
 
 }
