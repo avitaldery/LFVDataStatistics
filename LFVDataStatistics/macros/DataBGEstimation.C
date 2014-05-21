@@ -12,6 +12,7 @@ using namespace std;
 
 void DataBGEstimation(TString filename, TString sigFile)
 {
+	//new
 	InitExterns();
 
 	double newVarAVITAL = 8;
