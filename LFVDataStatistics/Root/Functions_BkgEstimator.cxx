@@ -26,7 +26,7 @@ TMinuit* minuit2 = 0;
 TMinuit* minuit3 = 0;
 
 void Newf1(int &npar, double *gin, double &f, double *par, int iflag) {
-	//par[i] are the polynomial coefficients
+	//par[0-degree] are the polynomial coefficients
 
 	//get histograms and polynomial degree
 	HistoObject *data;
@@ -53,6 +53,7 @@ void Newf1(int &npar, double *gin, double &f, double *par, int iflag) {
 		}
 		//double b = (n1+g+n2)/2;
 		//f += -2*(TMath::Log(TMath::Poisson(b,n1+g))+TMath::Log(TMath::Poisson(b,n2)));
+//		cout<<"newf1: for i = "<<i<<", Mcoll = "<<Mcoll<<",width = "<<Width<<", g = "<<g<<endl;
 		f += -2*(TMath::Log(TMath::Poisson(n2,n1+g)));
 	}
 
@@ -121,20 +122,22 @@ void PrintPolyCoefficients(TH1D* h1, TH1D* h2, int degree)
 	d.seth2(h2);
 	d.setDegree(degree);
 
-	minuit2 = new TMinuit(degree);
+	minuit2 = new TMinuit(degree+1);
 	minuit2->SetObjectFit(&d);
 	minuit2->SetFCN(Newf1);
 
+	h1->Draw();h2->Draw("sames");
+
 	// initialize the parameters:
 	TString varname;
-	double startValue = 0;
-	double stepSize = 0.001;
+	double startValue = 0.1;
+	double stepSize = 0.0001;
 	double min = -1;
 	double max = 1;
 	Int_t ierflg = 0;
 
 	//wider range for the free coefficient
-	minuit2->mnparm(0,"a_0",startValue,stepSize,10*min,10*max,ierflg);
+	minuit2->mnparm(0,"a_0",startValue,stepSize,min,max,ierflg);
 
 	cout<<"ierflg = "<<ierflg<<endl;
 
@@ -147,13 +150,14 @@ void PrintPolyCoefficients(TH1D* h1, TH1D* h2, int degree)
 	minuit2->Migrad();
 
 	//print
-	double value[degree];
+	double value[degree+1];
 	double err;
 	double g = 0;
 	TString printThis;
-	double a[degree];
+	double a[degree+1];
  	for (int i = 0; i <= degree; i++) {
-		a[i]=minuit2->GetParameter(i, value[i], err);
+//		a[i]=minuit2->GetParameter(i, value[i], err);
+ 		minuit2->GetParameter(i, value[i], err);
 		printThis.Form("a_%d   %f", i, value[i]);
     	cout << printThis << endl;
     }
@@ -288,7 +292,7 @@ double LikelihoodTestValue(TH1D* h_1, TH1D* h_2, double* muHatB, TH1D* signalGau
 	d.setBins(massBins,nbins+1);
 	d.setDegree(degree);
 
-	minuit = new TMinuit(nbins+1);
+	minuit = new TMinuit(nbins+1+degree+1);
 	minuit->SetObjectFit(&d);
 	minuit->SetFCN(meanDataEstimatorFunc);
 
@@ -305,11 +309,15 @@ double LikelihoodTestValue(TH1D* h_1, TH1D* h_2, double* muHatB, TH1D* signalGau
 		varname.Form("B%d",j);
 		minuit->mnparm(j,varname,startValue[j],stepSize,min[j],max[j],ierflg);
 	}
+	for (int d = 0; d<=degree; d++){
+		varname.Form("a%d",d);
+		minuit->mnparm(nbins+1+d,varname,0,0.0001,-1,1,ierflg);
+	}
 
 	minuit->SetMaxIterations(500);
 	minuit->Migrad();
 
-	for (int j=0; j<=nbins; j++){
+	for (int j=0; j<=nbins+degree+1; j++){
 		minuit->GetParameter(j,muHatB[j],errorVector[j]);
 	}
 
@@ -326,13 +334,13 @@ TH1D* meanDataEstimator(TH1D* h_1, TH1D* h_2, double* muHatB, TH1D* signalGaus, 
 	const Double_t * massBins = binsarray->GetArray();
 
 	//get two options: signal in ME or signal in EM and choose best fit
-	double testmuHatB1[nbins+2];
-	double testmuHatB2[nbins+2];
+	double testmuHatB1[nbins+2+degree];
+	double testmuHatB2[nbins+2+degree];
 	double v1 = LikelihoodTestValue(h_1,h_2,testmuHatB1,signalGaus,degree);
 	double v2 = LikelihoodTestValue(h_2,h_1,testmuHatB2,signalGaus,degree);
 //	cout<<"muHat1 = "<<testmuHatB1[0]<<", muHat2 = "<<testmuHatB2[0]<<endl;
-	if (v1<v2){memcpy(muHatB,testmuHatB1,(nbins+2+degree+1)*sizeof(double));}//cout<<"chosen is 1"<<endl;}
-	else {memcpy(muHatB,testmuHatB2,(nbins+2+degree+1)*sizeof(double));}//cout<<"chosen is 2"<<endl;}
+	if (v1<v2){memcpy(muHatB,testmuHatB1,(nbins+2+degree)*sizeof(double));}//cout<<"chosen is 1"<<endl;}
+	else {memcpy(muHatB,testmuHatB2,(nbins+2+degree)*sizeof(double));}//cout<<"chosen is 2"<<endl;}
 
 	TH1D* h_bkg = new TH1D(name,name,nbins,massBins);
 
